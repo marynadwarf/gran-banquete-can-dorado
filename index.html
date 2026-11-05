@@ -57,6 +57,7 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
  <div class="field"><label for="newmissiontitle">Título</label><input id="newmissiontitle" maxlength="100" placeholder="Ej. El juramento de la taberna"></div>
  <div class="field"><label for="newmissiondesc">Descripción</label><input id="newmissiondesc" maxlength="500" placeholder="¿Qué debe hacer el aventurero?"></div>
  <div class="field"><label for="newmissionreward">Recompensa en monedas</label><input id="newmissionreward" type="number" min="0" max="100" value="1"></div>
+ <div class="field"><label for="newmissiontype">Tipo de misión</label><select id="newmissiontype" style="width:100%;border:1px solid #cdbb9d;border-radius:8px;background:#fffaf1;padding:12px;font:inherit;color:var(--ink)"><option value="false">General · para todos</option><option value="true">Personal · aleatoria (3 por jugador)</option></select></div>
  <button class="btn gold full" id="createmission">Crear misión</button><div class="status" id="missionadminstatus"></div></div>
  <div class="card"><div class="topline"><div><h2 class="sectionhead">⚔️ Misiones del banquete</h2><p class="hint">Edita sus datos o activa y desactiva encargos.</p></div><button class="btn secondary" id="refreshmissions">Actualizar</button></div><div id="adminmissions"><p class="hint">Cargando misiones…</p></div></div>
 </section>
@@ -202,7 +203,7 @@ async function adminLoadMissions(){
  data.forEach(m=>{
   const row=document.createElement("div");row.className="adminrow";
   const h=document.createElement("h3");h.textContent=m.title;
-  const desc=document.createElement("p");desc.textContent=m.description+" · "+m.reward+" monedas · "+(m.is_active?"Activa":"Inactiva");
+  const desc=document.createElement("p");desc.textContent=m.description+" · "+m.reward+" monedas · "+(m.is_personal?"Personal":"General")+" · "+(m.is_active?"Activa":"Inactiva");
   const actions=document.createElement("div");actions.className="adminactions";
   const edit=document.createElement("button");edit.className="btn secondary";edit.textContent="Editar";
   edit.addEventListener("click",async()=>{
@@ -231,11 +232,13 @@ $("createmission").addEventListener("click",async()=>{
  const status=$("missionadminstatus");
  if(!title||!Number.isInteger(reward)||reward<0){status.textContent="Escribe un título y una recompensa válida.";return}
  const button=$("createmission");button.disabled=true;status.textContent="Creando misión…";
- const {error}=await db.rpc("admin_create_mission",{p_title:title,p_description:description,p_reward:reward});
+ const isPersonal=$("newmissiontype").value==="true";
+ const {error}=await db.rpc("admin_create_mission",{p_title:title,p_description:description,p_reward:reward,p_is_personal:isPersonal});
  button.disabled=false;
  if(error){status.textContent="No se pudo crear la misión.";console.error(error);return}
  $("newmissiontitle").value="";$("newmissiondesc").value="";$("newmissionreward").value="1";
- status.textContent="¡Misión creada!";
+ status.textContent=isPersonal?"¡Misión personal creada! Se asignará aleatoriamente hasta completar tres por jugador.":"¡Misión general creada!";
+ status.textContent+=" (Los personajes que entren a partir de ahora recibirán sus encargos personales.)";
  await adminLoadMissions();
 });
 
