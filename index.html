@@ -33,6 +33,21 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
  <div id="createform"><div class="field"><label for="newalias">Nombre o alias de aventurero</label><input id="newalias" maxlength="22" placeholder="Ej. Sir Croquetón" autocomplete="nickname"></div><button class="btn gold full" id="createprofile">✦ Crear personaje y entrar</button><p class="small">No necesitas correo ni contraseña.</p></div>
  <div id="welcomeprofile" class="hidden"><p class="intro">¡Tu personaje está listo! Guarda este código para recuperar tu perfil desde otro dispositivo.</p><div class="accesscode" id="mycode" style="font-size:1.15rem;letter-spacing:.14em;text-align:center;color:#7b5518;font-weight:bold;background:#f1dfb8;padding:12px;border-radius:9px;overflow-wrap:anywhere"></div><button class="btn gold full" id="enterbanquet">Entrar al banquete →</button><p class="small">Este código es personal. Guárdalo y no lo compartas.</p></div>
  <div class="divider">— ¿Ya tienes personaje? —</div><div class="field"><label for="existingcode">Código de acceso</label><input id="existingcode" maxlength="16" placeholder="Tu código personal" autocomplete="off" style="text-transform:uppercase"></div><button class="btn secondary full" id="recoverprofile">Recuperar mi personaje</button><div id="gateerror" class="error" role="alert"></div>
+
+ <button class="btn secondary full" id="showadmin">⚜ Acceso de la organizadora</button>
+</section>
+<section class="gate hidden" id="adminlogin">
+ <div class="gatecrest">👑</div><div class="tag" style="text-align:center">Acceso privado</div><h1>Despacho de la anfitriona</h1>
+ <p class="intro">Esta entrada está reservada para la organizadora del banquete.</p>
+ <div class="field"><label for="adminemail">Correo electrónico</label><input id="adminemail" type="email" autocomplete="username" placeholder="Tu correo"></div>
+ <div class="field"><label for="adminpassword">Contraseña</label><input id="adminpassword" type="password" autocomplete="current-password" placeholder="Tu contraseña"></div>
+ <button class="btn gold full" id="adminsignin">Entrar al despacho</button>
+ <button class="btn secondary full" id="backtoguest">Volver a la entrada de invitados</button>
+ <div id="adminerror" class="error" role="alert"></div>
+</section>
+<section class="wrap hidden" id="adminpanel">
+ <section class="welcome"><div class="topline"><div><div class="tag">Zona privada</div><div class="user">Despacho de la anfitriona 👑</div></div><button class="btn secondary" id="adminlogout">Cerrar sesión</button></div><p class="hint" style="margin:12px 0 0">Has accedido con una cuenta autorizada. Desde aquí gestionaremos los preparativos del banquete.</p></section>
+ <div class="card"><h2 class="sectionhead">¡Bienvenida, organizadora!</h2><p class="hint">El acceso privado ya está protegido. En el siguiente paso incorporaremos aquí la gestión de misiones, jugadores y monedas.</p><div class="notice">🔐 La aplicación ha comprobado tu sesión y tus permisos directamente con Supabase.</div></div>
 </section>
 <main class="wrap hidden" id="banquet">
  <section class="welcome"><div class="topline"><div><div class="tag">Bienvenida a la taberna</div><div class="user" id="playername">Aventurero</div></div><div class="coinpill">🪙 <span id="coinCount">0</span> monedas</div></div><p class="hint" style="margin:12px 0 0">Tu destino se escribe esta noche. Cumple tus encargos, gana monedas y deja tu huella en las crónicas del reino.</p></section>
@@ -117,6 +132,36 @@ async function loadRanking(){
 }
 $("createprofile").addEventListener("click",createProfile);
 $("enterbanquet").addEventListener("click",enterBanquet);
+
+$("showadmin").addEventListener("click",()=>{$("gate").classList.add("hidden");$("adminlogin").classList.remove("hidden");$("adminemail").focus()});
+$("backtoguest").addEventListener("click",()=>{$("adminlogin").classList.add("hidden");$("gate").classList.remove("hidden");$("adminerror").textContent=""});
+$("adminsignin").addEventListener("click",async()=>{
+ const button=$("adminsignin"),email=$("adminemail").value.trim(),password=$("adminpassword").value;
+ $("adminerror").textContent="";
+ if(!email||!password){$("adminerror").textContent="Introduce tu correo y contraseña.";return}
+ setBusy(button,true,"Comprobando acceso…");
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+ if(error){setBusy(button,false);$("adminerror").textContent="No se ha podido iniciar sesión. Comprueba tus datos.";console.error(error);return}
+ const {data:isAdmin,error:permissionError}=await db.rpc("is_admin");
+ if(permissionError||isAdmin!==true){
+  await db.auth.signOut();
+  setBusy(button,false);
+  $("adminerror").textContent="Esta cuenta no tiene permisos de administración.";
+  console.error(permissionError);
+  return;
+ }
+ setBusy(button,false);
+ $("adminlogin").classList.add("hidden");
+ $("adminpanel").classList.remove("hidden");
+});
+$("adminlogout").addEventListener("click",async()=>{
+ await db.auth.signOut();
+ $("adminpanel").classList.add("hidden");
+ $("adminlogin").classList.remove("hidden");
+ $("adminpassword").value="";
+ $("adminerror").textContent="Has cerrado la sesión.";
+});
+
 $("recoverprofile").addEventListener("click",recoverProfile);
 $("existingcode").addEventListener("keydown",e=>{if(e.key==="Enter")recoverProfile()});
 </script>
