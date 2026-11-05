@@ -21,6 +21,10 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.event{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:15px}.event h3{margin:3px 0 7px}.event p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.4}.num{font-size:1.5rem;color:var(--gold);font-weight:bold}
 .footer{text-align:center;color:#86765f;font-size:.8rem;padding:24px 0 10px}
 .status{font-size:.82rem;color:var(--muted);text-align:center;min-height:1.2em}
+.adminrow{border-top:1px solid var(--line);padding:12px 0}.adminrow:first-child{border-top:0}
+.adminrow h3{font-size:1.05rem;margin:0 0 5px}.adminrow p{color:var(--muted);font-size:.88rem;margin:4px 0 9px;line-height:1.4}
+.adminactions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.adminactions input{max-width:100px;padding:8px}.adminactions .btn{padding:8px 10px;font-size:.85rem}
+
 @media(min-width:700px){.wrap{padding:25px}.welcome{padding:20px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,7 +51,14 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
 </section>
 <section class="wrap hidden" id="adminpanel">
  <section class="welcome"><div class="topline"><div><div class="tag">Zona privada</div><div class="user">Despacho de la anfitriona 👑</div></div><button class="btn secondary" id="adminlogout">Cerrar sesión</button></div><p class="hint" style="margin:12px 0 0">Has accedido con una cuenta autorizada. Desde aquí gestionaremos los preparativos del banquete.</p></section>
- <div class="card"><h2 class="sectionhead">¡Bienvenida, organizadora!</h2><p class="hint">El acceso privado ya está protegido. En el siguiente paso incorporaremos aquí la gestión de misiones, jugadores y monedas.</p><div class="notice">🔐 La aplicación ha comprobado tu sesión y tus permisos directamente con Supabase.</div></div>
+ <div class="card"><h2 class="sectionhead">Panel de control</h2><p class="hint">Gestiona el tesoro de los aventureros y los encargos de la celebración.</p><div class="notice">🔐 Todas las operaciones se validan en Supabase y requieren permisos de organizadora.</div></div>
+ <div class="card"><div class="topline"><div><h2 class="sectionhead">🏆 Aventureros del reino</h2><p class="hint">Consulta sus monedas y corrige sus saldos si es necesario.</p></div><button class="btn secondary" id="refreshplayers">Actualizar</button></div><div id="adminplayers"><p class="hint">Cargando aventureros…</p></div></div>
+ <div class="card"><h2 class="sectionhead">📜 Crear un encargo</h2><p class="hint">Las nuevas misiones aparecerán en los perfiles de los invitados.</p>
+ <div class="field"><label for="newmissiontitle">Título</label><input id="newmissiontitle" maxlength="100" placeholder="Ej. El juramento de la taberna"></div>
+ <div class="field"><label for="newmissiondesc">Descripción</label><input id="newmissiondesc" maxlength="500" placeholder="¿Qué debe hacer el aventurero?"></div>
+ <div class="field"><label for="newmissionreward">Recompensa en monedas</label><input id="newmissionreward" type="number" min="0" max="100" value="1"></div>
+ <button class="btn gold full" id="createmission">Crear misión</button><div class="status" id="missionadminstatus"></div></div>
+ <div class="card"><div class="topline"><div><h2 class="sectionhead">⚔️ Misiones del banquete</h2><p class="hint">Edita sus datos o activa y desactiva encargos.</p></div><button class="btn secondary" id="refreshmissions">Actualizar</button></div><div id="adminmissions"><p class="hint">Cargando misiones…</p></div></div>
 </section>
 <main class="wrap hidden" id="banquet">
  <section class="welcome"><div class="topline"><div><div class="tag">Bienvenida a la taberna</div><div class="user" id="playername">Aventurero</div></div><div class="coinpill">🪙 <span id="coinCount">0</span> monedas</div></div><p class="hint" style="margin:12px 0 0">Tu destino se escribe esta noche. Cumple tus encargos, gana monedas y deja tu huella en las crónicas del reino.</p></section>
@@ -153,10 +164,85 @@ $("adminsignin").addEventListener("click",async()=>{
  setBusy(button,false);
  $("adminlogin").classList.add("hidden");
  $("adminpanel").classList.remove("hidden");
+ await adminLoadPlayers();await adminLoadMissions();
 });
+
+async function adminLoadPlayers(){
+ const box=$("adminplayers");box.textContent="Consultando aventureros…";
+ const {data,error}=await db.rpc("admin_list_players");
+ if(error){box.textContent="No se han podido cargar los jugadores.";console.error(error);return}
+ box.innerHTML="";
+ if(!data.length){box.textContent="Todavía no hay aventureros.";return}
+ data.forEach(p=>{
+  const row=document.createElement("div");row.className="adminrow";
+  const h=document.createElement("h3");h.textContent=p.player_alias;
+  const detail=document.createElement("p");detail.textContent=p.coins+" monedas";
+  const actions=document.createElement("div");actions.className="adminactions";
+  const delta=document.createElement("input");delta.type="number";delta.step="1";delta.value="1";delta.setAttribute("aria-label","Cambio de monedas para "+p.player_alias);
+  const apply=document.createElement("button");apply.className="btn secondary";apply.textContent="Aplicar cambio";
+  apply.addEventListener("click",async()=>{
+   const amount=Number(delta.value);
+   if(!Number.isInteger(amount)||amount===0){alert("Introduce un número entero distinto de cero.");return}
+   apply.disabled=true;
+   const {data:balance,error:changeError}=await db.rpc("admin_adjust_coins",{p_player_id:p.player_id,p_delta:amount});
+   apply.disabled=false;
+   if(changeError){alert("No se pudo modificar el saldo: "+changeError.message);return}
+   detail.textContent=balance+" monedas";
+   delta.value="1";
+  });
+  actions.append(delta,apply);row.append(h,detail,actions);box.append(row);
+ });
+}
+async function adminLoadMissions(){
+ const box=$("adminmissions");box.textContent="Consultando misiones…";
+ const {data,error}=await db.rpc("admin_list_missions");
+ if(error){box.textContent="No se han podido cargar las misiones.";console.error(error);return}
+ box.innerHTML="";
+ if(!data.length){box.textContent="Todavía no hay misiones.";return}
+ data.forEach(m=>{
+  const row=document.createElement("div");row.className="adminrow";
+  const h=document.createElement("h3");h.textContent=m.title;
+  const desc=document.createElement("p");desc.textContent=m.description+" · "+m.reward+" monedas · "+(m.is_active?"Activa":"Inactiva");
+  const actions=document.createElement("div");actions.className="adminactions";
+  const edit=document.createElement("button");edit.className="btn secondary";edit.textContent="Editar";
+  edit.addEventListener("click",async()=>{
+   const title=prompt("Título de la misión:",m.title);if(title===null)return;
+   const description=prompt("Descripción:",m.description);if(description===null)return;
+   const rewardText=prompt("Recompensa en monedas:",String(m.reward));if(rewardText===null)return;
+   const reward=Number(rewardText);
+   if(!title.trim()||!Number.isInteger(reward)||reward<0){alert("Revisa el título y la recompensa.");return}
+   const {error:updateError}=await db.rpc("admin_update_mission",{p_mission_id:m.mission_id,p_title:title,p_description:description,p_reward:reward});
+   if(updateError){alert("No se pudo editar: "+updateError.message);return}
+   await adminLoadMissions();
+  });
+  const toggle=document.createElement("button");toggle.className="btn secondary";toggle.textContent=m.is_active?"Desactivar":"Activar";
+  toggle.addEventListener("click",async()=>{
+   const {error:toggleError}=await db.rpc("admin_set_mission_active",{p_mission_id:m.mission_id,p_active:!m.is_active});
+   if(toggleError){alert("No se pudo cambiar el estado: "+toggleError.message);return}
+   await adminLoadMissions();
+  });
+  actions.append(edit,toggle);row.append(h,desc,actions);box.append(row);
+ });
+}
+$("refreshplayers").addEventListener("click",adminLoadPlayers);
+$("refreshmissions").addEventListener("click",adminLoadMissions);
+$("createmission").addEventListener("click",async()=>{
+ const title=$("newmissiontitle").value.trim(),description=$("newmissiondesc").value.trim(),reward=Number($("newmissionreward").value);
+ const status=$("missionadminstatus");
+ if(!title||!Number.isInteger(reward)||reward<0){status.textContent="Escribe un título y una recompensa válida.";return}
+ const button=$("createmission");button.disabled=true;status.textContent="Creando misión…";
+ const {error}=await db.rpc("admin_create_mission",{p_title:title,p_description:description,p_reward:reward});
+ button.disabled=false;
+ if(error){status.textContent="No se pudo crear la misión.";console.error(error);return}
+ $("newmissiontitle").value="";$("newmissiondesc").value="";$("newmissionreward").value="1";
+ status.textContent="¡Misión creada!";
+ await adminLoadMissions();
+});
+
 $("adminlogout").addEventListener("click",async()=>{
  await db.auth.signOut();
  $("adminpanel").classList.add("hidden");
+ $("gate").classList.remove("hidden");
  $("adminlogin").classList.remove("hidden");
  $("adminpassword").value="";
  $("adminerror").textContent="Has cerrado la sesión.";
