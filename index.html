@@ -66,11 +66,7 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
  <nav class="tabs" aria-label="Secciones"><button class="tab active" data-tab="missions">📜 Misiones</button><button class="tab" data-tab="ranking">🏆 Ranking</button><button class="tab" data-tab="board">📯 Tablón</button><button class="tab" data-tab="events">⚔️ Eventos</button></nav>
  <section class="panel active" id="missions"><h2 class="sectionhead">Tus encargos</h2><p class="hint">Completa tus misiones durante la celebración. ¡No reveles tus objetivos secretos!</p><div id="missionlist"></div><div class="notice">✨ Marca una misión cuando la hayas cumplido. La recompensa se añadirá a tu bolsa y no podrás reclamarla dos veces.</div><div class="status" id="missionstatus"></div></section>
  <section class="panel" id="ranking"><h2 class="sectionhead">La fama del reino</h2><p class="hint">Clasificación compartida de todos los aventureros.</p><div id="ranklist"></div><div class="status" id="rankstatus"></div><div class="notice">👑 Al cierre del banquete, la persona con más monedas será coronada Gran Tesorera del Reino.</div></section>
- <section class="panel" id="board"><h2 class="sectionhead">Tablón de encargos</h2><p class="hint">Misiones abiertas para cualquier aventurero.</p>
- <div class="card"><b>🤝 Alianza inesperada</b><p>Encuentra a dos personas que no se conocían y consigue que se hagan una foto juntas.</p><small>Recompensa: 2 monedas · Encargo abierto</small></div>
- <div class="card"><b>🍻 El brindis legendario</b><p>Inventa un brindis épico y consigue que al menos cuatro personas lo repitan.</p><small>Recompensa: 3 monedas · Encargo abierto</small></div>
- <div class="card"><b>🕵️ Cazador de rumores</b><p>Descubre cuál es el accesorio medieval más improvisado de la fiesta.</p><small>Recompensa: 1 moneda · Encargo abierto</small></div>
- <div class="card"><b>🎭 El bufón de la corte</b><p>Haz reír a tres personas con una historia, gesto o chiste.</p><small>Recompensa: 2 monedas · Encargo abierto</small></div></section>
+ <section class="panel" id="board"><h2 class="sectionhead">Tablón de encargos</h2><p class="hint">Estas misiones son públicas, pero cada una solo puede ser reclamada por un aventurero. ¡Elige bien tu desafío!</p><div id="boardlist"><p class="hint">Abre el tablón para consultar los encargos…</p></div><div class="status" id="boardstatus" aria-live="polite"></div><div class="notice">📯 Cuando reclames un encargo, quedará reservado para ti. Al completarlo recibirás las monedas automáticamente.</div></section>
  <section class="panel" id="events"><h2 class="sectionhead">Agenda del banquete</h2><p class="hint">La anfitriona anunciará cada evento. ¡Permanece atento a las campanas!</p><div class="grid">
  <div class="event"><div class="num">01</div><h3>Justas de espuma</h3><p>El torneo de escudos y armas. ¡Que gane el más honorable!</p></div>
  <div class="event"><div class="num">02</div><h3>Arquería real</h3><p>Prueba tu puntería y suma gloria para tu casa.</p></div>
@@ -87,7 +83,7 @@ const $ = id => document.getElementById(id);
 function showError(message){$("gateerror").textContent=message}
 function setBusy(button,busy,label){button.disabled=busy;if(busy)button.textContent=label;else button.textContent=button.dataset.original||button.textContent}
 document.querySelectorAll(".btn").forEach(b=>b.dataset.original=b.textContent);
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");$(t.dataset.tab).classList.add("active");if(t.dataset.tab==="ranking")loadRanking()}));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");$(t.dataset.tab).classList.add("active");if(t.dataset.tab==="ranking")loadRanking();if(t.dataset.tab==="board")loadBoard()}));
 async function createProfile(){
  const button=$("createprofile"),alias=$("newalias").value.trim();showError("");
  if(alias.length<2){showError("Elige un nombre de al menos 2 caracteres.");return}
@@ -132,6 +128,50 @@ async function loadMissions(){
    if(claimError||!result||!result.length){check.checked=false;check.disabled=false;$("missionstatus").textContent="No se ha podido registrar. Inténtalo de nuevo.";console.error(claimError);return}
    m.claimed=true;activePlayer.coins=result[0].coins;$("coinCount").textContent=activePlayer.coins;item.classList.add("done");$("missionstatus").textContent="¡Hazaña registrada! Has ganado "+m.reward+" monedas.";loadRanking();
   });
+ });
+}
+async function loadBoard(){
+ const box=$("boardlist"),status=$("boardstatus");
+ box.innerHTML="<p class='hint'>Consultando el tablón…</p>";status.textContent="";
+ const {data,error}=await db.rpc("get_board_missions",{p_access_code:activePlayer.access_code});
+ if(error){box.innerHTML="<p class='error'>No se han podido cargar los encargos del tablón.</p>";console.error(error);return}
+ box.innerHTML="";
+ if(!data||!data.length){box.textContent="No hay encargos activos en el tablón.";return}
+ data.forEach(m=>{
+  const card=document.createElement("div");card.className="card";
+  const top=document.createElement("div");top.className="topline";
+  const title=document.createElement("strong");title.textContent=m.title;
+  const reward=document.createElement("span");reward.className="reward";reward.textContent="+"+m.reward+" 🪙";
+  top.append(title,reward);
+  const desc=document.createElement("p");desc.className="hint";desc.style.margin="9px 0";desc.textContent=m.description;
+  const state=document.createElement("p");state.style.margin="8px 0";state.style.fontSize=".88rem";
+  const action=document.createElement("button");action.className="btn secondary";
+  if(m.completed){
+   state.textContent="✓ Completada por ti";state.style.color="var(--green)";action.textContent="Completada";action.disabled=true;
+  }else if(m.claimed_by){
+   state.textContent=m.claimed_by_me?"🔒 Reservada por ti":"🔒 Reclamada por "+m.claimed_by;
+   action.textContent=m.claimed_by_me?"Marcar como completada":"No disponible";action.disabled=!m.claimed_by_me;
+   if(m.claimed_by_me)action.className="btn gold";
+  }else{
+   state.textContent="Disponible para reclamar";
+   action.textContent="Reclamar encargo";
+  }
+  action.addEventListener("click",async()=>{
+   action.disabled=true;status.textContent="Registrando el encargo…";
+   if(!m.claimed_by){
+    const {data:ok,error:claimError}=await db.rpc("claim_board_mission",{p_access_code:activePlayer.access_code,p_mission_id:m.id});
+    if(claimError||ok!==true){status.textContent=claimError?"No se ha podido reclamar. Puede que otra persona se haya adelantado.":"Este encargo ya no está disponible.";console.error(claimError);await loadBoard();return}
+    status.textContent="¡Encargo reservado! Ya está en tu lista de desafíos.";
+    await loadBoard();
+   }else{
+    const {data:balance,error:completeError}=await db.rpc("complete_board_mission",{p_access_code:activePlayer.access_code,p_mission_id:m.id});
+    if(completeError||balance===null){status.textContent="No se ha podido completar el encargo. Inténtalo de nuevo.";console.error(completeError);action.disabled=false;return}
+    activePlayer.coins=balance;$("coinCount").textContent=balance;
+    status.textContent="¡Hazaña cumplida! Has ganado "+m.reward+" monedas.";
+    await loadBoard();await loadRanking();
+   }
+  });
+  card.append(top,desc,state,action);box.append(card);
  });
 }
 async function loadRanking(){
