@@ -137,6 +137,7 @@ async function loadBoard(){
  if(error){box.innerHTML="<p class='error'>No se han podido cargar los encargos del tablón.</p>";console.error(error);return}
  box.innerHTML="";
  if(!data||!data.length){box.textContent="No hay encargos activos en el tablón.";return}
+ const hasPendingMine=data.some(m=>m.claimed_by_me&&!m.completed);
  data.forEach(m=>{
   const card=document.createElement("div");card.className="card";
   const top=document.createElement("div");top.className="topline";
@@ -152,6 +153,9 @@ async function loadBoard(){
    state.textContent=m.claimed_by_me?"🔒 Reservada por ti":"🔒 Reclamada por "+m.claimed_by;
    action.textContent=m.claimed_by_me?"Marcar como completada":"No disponible";action.disabled=!m.claimed_by_me;
    if(m.claimed_by_me)action.className="btn gold";
+  }else if(hasPendingMine){
+   state.textContent="🔒 Ya tienes otro encargo pendiente. Complétalo para poder reclamar uno nuevo.";
+   action.textContent="Completa tu encargo actual";action.disabled=true;
   }else{
    state.textContent="Disponible para reclamar";
    action.textContent="Reclamar encargo";
