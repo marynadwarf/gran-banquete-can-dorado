@@ -24,6 +24,15 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
 .adminrow{border-top:1px solid var(--line);padding:12px 0}.adminrow:first-child{border-top:0}
 .adminrow h3{font-size:1.05rem;margin:0 0 5px}.adminrow p{color:var(--muted);font-size:.88rem;margin:4px 0 9px;line-height:1.4}
 .adminactions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.adminactions input{max-width:100px;padding:8px}.adminactions .btn{padding:8px 10px;font-size:.85rem}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin:14px 0}
+.photo-card{background:#f1e3ca;border:1px solid var(--line);border-radius:10px;padding:7px;min-width:0}
+.photo-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;cursor:pointer;background:#e5d5b8}
+.photo-credit{font-size:.78rem;color:var(--muted);padding:7px 2px 2px;overflow-wrap:anywhere}
+.photo-upload{border:1px dashed #b99b6c;border-radius:10px;background:#f6ead5;padding:14px;margin:12px 0}
+.photo-upload input{background:#fffaf1}
+.photo-admin-row{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line);padding:10px 0}
+.photo-admin-row img{width:64px;height:64px;object-fit:cover;border-radius:7px}
+
 
 @media(min-width:700px){.wrap{padding:25px}.welcome{padding:20px}}
 </style>
@@ -53,6 +62,7 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
  <section class="welcome"><div class="topline"><div><div class="tag">Zona privada</div><div class="user">Despacho de la anfitriona 👑</div></div><button class="btn secondary" id="adminlogout">Cerrar sesión</button></div><p class="hint" style="margin:12px 0 0">Has accedido con una cuenta autorizada. Desde aquí gestionaremos los preparativos del banquete.</p></section>
  <div class="card"><h2 class="sectionhead">Panel de control</h2><p class="hint">Gestiona el tesoro de los aventureros y los encargos de la celebración.</p><div class="notice">🔐 Todas las operaciones se validan en Supabase y requieren permisos de organizadora.</div></div>
  <div class="card"><div class="topline"><div><h2 class="sectionhead">🏆 Aventureros del reino</h2><p class="hint">Consulta sus monedas y corrige sus saldos si es necesario.</p></div><button class="btn secondary" id="refreshplayers">Actualizar</button></div><div id="adminplayers"><p class="hint">Cargando aventureros…</p></div></div>
+ <div class="card"><div class="topline"><div><h2 class="sectionhead">📸 Fotografías del banquete</h2><p class="hint">Revisa y retira imágenes si fuera necesario.</p></div><button class="btn secondary" id="refreshadminphotos">Actualizar</button></div><div id="adminphotos"><p class="hint">Cargando fotografías…</p></div></div>
  <div class="card"><h2 class="sectionhead">📜 Crear un encargo</h2><p class="hint">Las nuevas misiones aparecerán en los perfiles de los invitados.</p>
  <div class="field"><label for="newmissiontitle">Título</label><input id="newmissiontitle" maxlength="100" placeholder="Ej. El juramento de la taberna"></div>
  <div class="field"><label for="newmissiondesc">Descripción</label><input id="newmissiondesc" maxlength="500" placeholder="¿Qué debe hacer el aventurero?"></div>
@@ -77,6 +87,18 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
   <button class="btn gold full" id="publishwall">📜 Publicar en las crónicas</button>
   <div class="status" id="wallstatus" aria-live="polite"></div>
  </div>
+ <div class="card">
+  <h3 style="margin:0 0 8px">📸 Compartir una fotografía</h3>
+  <p class="hint">Sube una imagen de la celebración para añadirla al álbum común. Máximo 5 MB por fotografía.</p>
+  <div class="photo-upload">
+   <div class="field"><label for="photofile">Elige una fotografía</label><input id="photofile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></div>
+   <button class="btn gold full" id="uploadphoto">📷 Añadir al álbum</button>
+   <div class="status" id="photostatus" aria-live="polite"></div>
+  </div>
+ </div>
+ <h3 class="sectionhead">🖼️ Álbum del banquete</h3>
+ <p class="hint">Las fotografías compartidas por los aventureros aparecerán aquí.</p>
+ <div id="photogallery" class="photo-grid"><p class="hint">Cargando fotografías…</p></div>
  <h3 class="sectionhead">📌 Recuerdos de los aventureros</h3>
  <div id="wallposts"><p class="hint">Cargando las crónicas…</p></div>
  <button class="btn secondary full" id="refreshwall">Actualizar recuerdos</button>
@@ -219,6 +241,54 @@ async function loadWall(){
   head.append(author,date);card.append(head,body);box.append(card);
  });
 }
+ await loadWallPhotos();
+}
+async function loadWallPhotos(){
+ const box=$("photogallery");
+ box.innerHTML="<p class='hint'>Consultando el álbum…</p>";
+ const {data,error}=await db.rpc("get_wall_photos",{p_access_code:activePlayer.access_code});
+ if(error){box.innerHTML="<p class='error'>No se han podido cargar las fotografías.</p>";console.error(error);return}
+ box.innerHTML="";
+ if(!data||!data.length){box.innerHTML="<p class='hint'>Todavía no hay fotografías. ¡Inaugura el álbum!</p>";return}
+ data.forEach(photo=>{
+  const card=document.createElement("article");card.className="photo-card";
+  const image=document.createElement("img");
+  const publicUrl=db.storage.from("banquet-photos").getPublicUrl(photo.file_path).data.publicUrl;
+  image.src=publicUrl;image.alt="Fotografía compartida por "+photo.player_alias;image.loading="lazy";
+  image.addEventListener("click",()=>window.open(publicUrl,"_blank","noopener"));
+  const credit=document.createElement("div");credit.className="photo-credit";
+  credit.textContent=photo.player_alias+" · "+new Date(photo.created_at).toLocaleDateString("es-ES");
+  card.append(image,credit);box.append(card);
+ });
+}
+$("uploadphoto").addEventListener("click",async()=>{
+ const button=$("uploadphoto"),file=$("photofile").files[0],status=$("photostatus");
+ status.textContent="";
+ if(!file){status.textContent="Primero elige una fotografía.";return}
+ const allowed=["image/jpeg","image/png","image/webp","image/gif"];
+ if(!allowed.includes(file.type)){status.textContent="Formato no compatible. Usa JPG, PNG, WEBP o GIF.";return}
+ if(file.size>5*1024*1024){status.textContent="La fotografía supera el límite de 5 MB.";return}
+ const extensions={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"};
+ const path="uploads/"+crypto.randomUUID()+"."+extensions[file.type];
+ button.disabled=true;button.textContent="Subiendo fotografía…";
+ const {error:uploadError}=await db.storage.from("banquet-photos").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+ if(uploadError){
+  button.disabled=false;button.textContent="📷 Añadir al álbum";
+  status.textContent="No se ha podido subir la fotografía. Inténtalo de nuevo.";
+  console.error(uploadError);return;
+ }
+ const {error:registerError}=await db.rpc("register_wall_photo",{p_access_code:activePlayer.access_code,p_file_path:path});
+ if(registerError){
+  await db.storage.from("banquet-photos").remove([path]);
+  button.disabled=false;button.textContent="📷 Añadir al álbum";
+  status.textContent="La imagen se subió, pero no se pudo registrar en el álbum.";
+  console.error(registerError);return;
+ }
+ $("photofile").value="";
+ button.disabled=false;button.textContent="📷 Añadir al álbum";
+ status.textContent="¡Fotografía añadida al álbum del banquete!";
+ await loadWallPhotos();
+}
 $("publishwall").addEventListener("click",async()=>{
  const button=$("publishwall"),body=$("wallmessage").value.trim(),recipient=$("wallrecipient").value||null;
  $("wallstatus").textContent="";
@@ -264,7 +334,7 @@ $("adminsignin").addEventListener("click",async()=>{
  setBusy(button,false);
  $("adminlogin").classList.add("hidden");
  $("adminpanel").classList.remove("hidden");
- await adminLoadPlayers();await adminLoadMissions();
+ await adminLoadPlayers();await adminLoadMissions();await adminLoadPhotos();
 });
 
 async function adminLoadPlayers(){
@@ -292,9 +362,16 @@ async function adminLoadPlayers(){
   });
   const remove=document.createElement("button");remove.className="btn";remove.style.background="#963f35";remove.textContent="🗑️ Eliminar personaje";
   remove.addEventListener("click",async()=>{
-   const sure=confirm("¿Eliminar definitivamente a "+p.player_alias+"?\n\nSe borrarán su personaje, monedas, misiones, reservas del tablón y todos sus mensajes y cartas. Esta acción no se puede deshacer.");
+   const sure=confirm("¿Eliminar definitivamente a "+p.player_alias+"?\n\nSe borrarán su personaje, monedas, misiones, reservas del tablón, mensajes, cartas y fotografías. Esta acción no se puede deshacer.");
    if(!sure)return;
    remove.disabled=true;remove.textContent="Eliminando…";
+   const {data:photoRows,error:photoRowsError}=await db.rpc("admin_get_player_photo_paths",{p_player_id:p.player_id});
+   if(photoRowsError){remove.disabled=false;remove.textContent="🗑️ Eliminar personaje";alert("No se han podido preparar sus fotografías para eliminarlas.");console.error(photoRowsError);return}
+   const photoPaths=(photoRows||[]).map(x=>x.file_path);
+   if(photoPaths.length){
+    const {error:storageError}=await db.storage.from("banquet-photos").remove(photoPaths);
+    if(storageError){remove.disabled=false;remove.textContent="🗑️ Eliminar personaje";alert("No se han podido eliminar sus fotografías. El personaje no se ha borrado.");console.error(storageError);return}
+   }
    const {data:deleted,error:deleteError}=await db.rpc("admin_delete_player",{p_player_id:p.player_id});
    if(deleteError||deleted!==true){
     remove.disabled=false;remove.textContent="🗑️ Eliminar personaje";
@@ -306,6 +383,36 @@ async function adminLoadPlayers(){
   actions.append(delta,apply,remove);row.append(h,detail,actions);box.append(row);
  });
 }
+async function adminLoadPhotos(){
+ const box=$("adminphotos");box.textContent="Consultando fotografías…";
+ const {data,error}=await db.rpc("admin_list_wall_photos");
+ if(error){box.textContent="No se han podido cargar las fotografías.";console.error(error);return}
+ box.innerHTML="";
+ if(!data||!data.length){box.textContent="Todavía no se han compartido fotografías.";return}
+ data.forEach(photo=>{
+  const row=document.createElement("div");row.className="photo-admin-row";
+  const image=document.createElement("img");
+  image.src=db.storage.from("banquet-photos").getPublicUrl(photo.file_path).data.publicUrl;
+  image.alt="Fotografía de "+photo.player_alias;
+  const info=document.createElement("div");info.style.flex="1";
+  const name=document.createElement("strong");name.textContent=photo.player_alias;
+  const date=document.createElement("p");date.className="hint";date.style.margin="4px 0 0";date.textContent=new Date(photo.created_at).toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"});
+  info.append(name,date);
+  const remove=document.createElement("button");remove.className="btn";remove.style.background="#963f35";remove.textContent="Eliminar";
+  remove.addEventListener("click",async()=>{
+   if(!confirm("¿Eliminar definitivamente esta fotografía del álbum?"))return;
+   remove.disabled=true;remove.textContent="Eliminando…";
+   const {error:storageError}=await db.storage.from("banquet-photos").remove([photo.file_path]);
+   if(storageError){remove.disabled=false;remove.textContent="Eliminar";alert("No se ha podido eliminar el archivo: "+storageError.message);console.error(storageError);return}
+   const {error:recordError}=await db.rpc("admin_delete_wall_photo",{p_photo_id:photo.id});
+   if(recordError){alert("El archivo se ha eliminado, pero no se pudo actualizar su registro. Actualiza el panel.");console.error(recordError)}
+   await adminLoadPhotos();
+  });
+  row.append(image,info,remove);box.append(row);
+ });
+}
+$("refreshadminphotos").addEventListener("click",adminLoadPhotos);
+
 async function adminLoadMissions(){
  const box=$("adminmissions");box.textContent="Consultando misiones…";
  const {data,error}=await db.rpc("admin_list_missions");
