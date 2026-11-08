@@ -240,7 +240,6 @@ async function loadWall(){
   const body=document.createElement("p");body.style.whiteSpace="pre-wrap";body.style.lineHeight="1.55";body.style.margin="12px 0 0";body.textContent=post.body;
   head.append(author,date);card.append(head,body);box.append(card);
  });
-}
  await loadWallPhotos();
 }
 async function loadWallPhotos(){
@@ -288,7 +287,7 @@ $("uploadphoto").addEventListener("click",async()=>{
  button.disabled=false;button.textContent="📷 Añadir al álbum";
  status.textContent="¡Fotografía añadida al álbum del banquete!";
  await loadWallPhotos();
-}
+});
 $("publishwall").addEventListener("click",async()=>{
  const button=$("publishwall"),body=$("wallmessage").value.trim(),recipient=$("wallrecipient").value||null;
  $("wallstatus").textContent="";
