@@ -43,10 +43,16 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
  --parchment-light:#fff4dc;--wood:#21140f;
 }
 body{
- background:
-  radial-gradient(ellipse at 50% 0%,rgba(116,75,39,.35),transparent 55%),
-  repeating-linear-gradient(92deg,rgba(255,255,255,.018) 0 2px,transparent 2px 9px),
-  linear-gradient(135deg,#2b1c15,#493021 48%,#261710);
+ background-color:#10291f;
+ background-image:
+  radial-gradient(ellipse 10px 22px at 50% 18%,rgba(143,180,123,.105) 0 42%,transparent 75%),
+  radial-gradient(ellipse 10px 22px at 50% 82%,rgba(143,180,123,.105) 0 42%,transparent 75%),
+  radial-gradient(ellipse 22px 10px at 18% 50%,rgba(143,180,123,.095) 0 42%,transparent 75%),
+  radial-gradient(ellipse 22px 10px at 82% 50%,rgba(143,180,123,.095) 0 42%,transparent 75%),
+  radial-gradient(circle at 50% 50%,rgba(177,198,139,.12) 0 2px,transparent 3px),
+  radial-gradient(ellipse at 50% 0%,rgba(91,130,83,.2),transparent 62%),
+  linear-gradient(135deg,#10291f,#18382b 52%,#0d241b);
+ background-size:96px 96px,96px 96px,96px 96px,96px 96px,96px 96px,auto,auto;
  background-attachment:fixed;
  color:#f6e8cc;
 }
@@ -244,7 +250,7 @@ input:focus,select:focus,textarea:focus{
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header><div class="eyebrow">✦ Una noche de leyendas · Tenerife ✦</div><div class="brand">El Gran Banquete<br>del Can Dorado</div><div class="sub">Taberna, aventuras y crónicas de cumpleaños</div></header>
+<header><div class="eyebrow">✦ Una noche de leyendas ✦</div><div class="brand">El Gran Banquete<br>del Can Dorado</div><div class="sub">Taberna, aventuras y crónicas de cumpleaños</div></header>
 <section class="gate" id="gate">
  <div class="gatecrest">🍻 🐕 👑</div><div class="tag" style="text-align:center">Bienvenido, viajero</div><h1>Las puertas de la taberna</h1>
  <p class="intro">Crea tu personaje para entrar al Gran Banquete. Tu nombre aparecerá en el ranking y en las crónicas.</p>
