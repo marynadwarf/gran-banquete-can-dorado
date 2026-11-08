@@ -35,6 +35,155 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
 
 
 @media(min-width:700px){.wrap{padding:25px}.welcome{padding:20px}}
+
+/* ═══ Identidad visual: taberna medieval del Can Dorado ═══ */
+:root{
+ --ink:#2b1b13;--muted:#725b45;--paper:#f5e7c9;--line:#b68b4b;
+ --gold:#d0a34f;--green:#4e6040;--brown:#321d16;
+ --parchment-light:#fff4dc;--wood:#21140f;
+}
+body{
+ background:
+  radial-gradient(ellipse at 50% 0%,rgba(116,75,39,.35),transparent 55%),
+  repeating-linear-gradient(92deg,rgba(255,255,255,.018) 0 2px,transparent 2px 9px),
+  linear-gradient(135deg,#2b1c15,#493021 48%,#261710);
+ background-attachment:fixed;
+ color:#f6e8cc;
+}
+header{
+ position:relative;overflow:hidden;
+ padding:36px 18px 30px;
+ background:
+  radial-gradient(ellipse at 50% 0%,rgba(207,163,79,.18),transparent 60%),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 5px),
+  linear-gradient(135deg,#1d120e,#4a2d1e 48%,#21140f);
+ border-bottom:3px solid #c49a52;
+ box-shadow:0 7px 24px rgba(0,0,0,.4);
+}
+header:after{
+ content:"✦ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✦";
+ display:block;color:#d0a34f;opacity:.8;letter-spacing:.12em;
+ font-size:.72rem;margin:17px auto 0;max-width:420px;white-space:nowrap;overflow:hidden;
+}
+.eyebrow{color:#e4c783;letter-spacing:.24em;font-size:.68rem}
+.brand{
+ color:#fff1d3;text-shadow:0 3px 0 #26140d,0 5px 18px rgba(0,0,0,.6);
+ font-weight:normal;letter-spacing:.025em;
+}
+.sub{color:#d8c3a1;letter-spacing:.04em}
+.wrap{max-width:1020px}
+.gate,.welcome,.card,.mission,.rank,.notice{
+ background:
+  repeating-linear-gradient(0deg,rgba(116,77,35,.025) 0 1px,transparent 1px 4px),
+  linear-gradient(145deg,#fff3d9,#eddbb7);
+ color:var(--ink);
+ border:1px solid #b99155;
+ border-radius:5px;
+ box-shadow:0 5px 14px rgba(0,0,0,.22),inset 0 0 0 3px rgba(255,255,255,.28);
+}
+.gate{position:relative;border:2px solid #c39b5c;box-shadow:0 12px 32px rgba(0,0,0,.38),inset 0 0 0 5px rgba(185,138,54,.12)}
+.gate:before,.gate:after{
+ content:"❧";position:absolute;color:#b78a45;font-size:1.35rem;top:9px;
+}
+.gate:before{left:12px}.gate:after{right:12px;transform:scaleX(-1)}
+.gate h1{color:#4a2c1b;font-weight:normal}
+.intro{color:#70563d}
+.tag{color:#52613e;letter-spacing:.14em}
+.user{color:#43291a}
+.coinpill{
+ background:linear-gradient(135deg,#f8e8b9,#e7c879);
+ border:1px solid #b88a38;color:#684613;
+ box-shadow:inset 0 1px rgba(255,255,255,.8),0 2px 5px rgba(80,48,15,.12);
+}
+.btn{
+ background:linear-gradient(180deg,#563624,#321d16);
+ border:1px solid #21120d;border-radius:4px;
+ box-shadow:0 3px 0 #1d100b,0 4px 8px rgba(44,25,14,.18);
+ transition:transform .15s ease,filter .15s ease,box-shadow .15s ease;
+}
+.btn:hover:not(:disabled){filter:brightness(1.13);transform:translateY(-1px);box-shadow:0 4px 0 #1d100b,0 6px 12px rgba(44,25,14,.2)}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #1d100b}
+.btn:disabled{opacity:.58;cursor:not-allowed}
+.btn.gold{
+ background:linear-gradient(180deg,#e1bd70,#bd8e3e);
+ border-color:#9c702d;color:#38220d;
+ box-shadow:0 3px 0 #896026,0 4px 8px rgba(44,25,14,.16);
+}
+.btn.gold:hover:not(:disabled){box-shadow:0 4px 0 #896026,0 6px 12px rgba(44,25,14,.2)}
+.btn.secondary{
+ background:linear-gradient(180deg,#f2e4c8,#dfc9a3);
+ border:1px solid #b99b6c;color:#503823;
+ box-shadow:0 2px 0 #b69a70;
+}
+input,select,textarea{
+ border:1px solid #b99b6c!important;border-radius:4px!important;
+ background:#fff8e9!important;color:#39271a!important;
+ box-shadow:inset 0 1px 3px rgba(78,48,20,.08);
+}
+input:focus,select:focus,textarea:focus{
+ outline:2px solid rgba(190,145,65,.42);border-color:#a9782f!important;
+}
+.tabs{
+ gap:8px;padding:9px 3px 15px;
+ border-bottom:1px solid rgba(218,180,111,.35);margin-bottom:17px;
+}
+.tab{
+ background:linear-gradient(180deg,#e9d7b5,#d6bf96);
+ border:1px solid #aa895a;border-radius:4px;
+ color:#49301e;font-weight:bold;
+ box-shadow:0 2px 0 rgba(0,0,0,.18);
+}
+.tab.active{
+ background:linear-gradient(180deg,#68452e,#382219);
+ border-color:#d0a34f;color:#fff0d0;
+ box-shadow:0 2px 0 #1c100b,inset 0 0 0 1px rgba(255,224,160,.12);
+}
+.sectionhead{
+ color:#4a2c1b;font-weight:normal;
+ text-shadow:0 1px rgba(255,255,255,.6);
+}
+.hint{color:#755d43}
+.mission{
+ border-left:4px solid #b88a3d;border-radius:4px;padding:17px;
+}
+.mission.done{background:linear-gradient(145deg,#e8eadb,#dce0cd);border-left-color:#697b52}
+.mission strong{color:#43291a}
+.reward{color:#8a601d;letter-spacing:.03em}
+.rank{border-radius:4px;border-left:4px solid #c39b54}
+.rank:first-child{border-left-color:#c49a35}
+.score{color:#805a1e}
+.notice{
+ border:1px dashed #b18b50;border-radius:4px;
+ background:linear-gradient(135deg,#f9efd9,#eddfc1);
+ color:#685033;
+}
+.event{
+ background:linear-gradient(145deg,#fff1d5,#ead5ae);
+ border:1px solid #b99155;border-radius:4px;
+ box-shadow:0 4px 10px rgba(0,0,0,.15),inset 0 0 0 3px rgba(255,255,255,.25);
+}
+.event h3{color:#492d1b}
+.num{color:#a4772d;text-shadow:0 1px rgba(255,255,255,.7)}
+.photo-card{background:#ead7b4;border:1px solid #b68b4b;border-radius:4px;box-shadow:0 3px 8px rgba(61,37,18,.16)}
+.photo-card img{border-radius:2px}
+.photo-upload{background:rgba(205,165,98,.12);border:1px dashed #b18b50;border-radius:4px}
+.footer{color:#d0b88e}
+.adminrow{border-color:#d2bd98}
+.photo-admin-row{border-color:#d2bd98}
+.status{color:#735b40}
+.error{color:#963f35}
+@media(max-width:600px){
+ header{padding:28px 14px 23px}
+ header:after{font-size:.58rem;letter-spacing:0}
+ .wrap{padding:13px}
+ .gate{margin:18px 13px;padding:20px}
+ .tab{padding:9px 12px;font-size:.88rem}
+ .photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+ .btn{transition:none}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
