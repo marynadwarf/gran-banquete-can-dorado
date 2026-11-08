@@ -230,8 +230,8 @@ async function loadWall(){
  select.value=current;
  if(postsError){box.innerHTML="<p class='error'>No se han podido cargar los recuerdos.</p>";console.error(postsError);return}
  box.innerHTML="";
- if(!posts||!posts.length){box.innerHTML="<p class='hint'>Todavía no hay recuerdos. ¡Sé el primero en escribir en las crónicas!</p>";return}
- posts.forEach(post=>{
+ if(!posts||!posts.length){box.innerHTML="<p class='hint'>Todavía no hay recuerdos. ¡Sé el primero en escribir en las crónicas!</p>";}
+ else posts.forEach(post=>{
   const card=document.createElement("article");card.className="card";
   card.style.background=post.post_type==="letter"?"#f3e5c9":"var(--paper)";
   const head=document.createElement("div");head.className="topline";
