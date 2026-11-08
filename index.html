@@ -290,7 +290,20 @@ async function adminLoadPlayers(){
    detail.textContent=balance+" monedas";
    delta.value="1";
   });
-  actions.append(delta,apply);row.append(h,detail,actions);box.append(row);
+  const remove=document.createElement("button");remove.className="btn";remove.style.background="#963f35";remove.textContent="🗑️ Eliminar personaje";
+  remove.addEventListener("click",async()=>{
+   const sure=confirm("¿Eliminar definitivamente a "+p.player_alias+"?\n\nSe borrarán su personaje, monedas, misiones, reservas del tablón y todos sus mensajes y cartas. Esta acción no se puede deshacer.");
+   if(!sure)return;
+   remove.disabled=true;remove.textContent="Eliminando…";
+   const {data:deleted,error:deleteError}=await db.rpc("admin_delete_player",{p_player_id:p.player_id});
+   if(deleteError||deleted!==true){
+    remove.disabled=false;remove.textContent="🗑️ Eliminar personaje";
+    alert("No se ha podido eliminar el personaje. "+(deleteError?.message||"Puede que ya no exista."));
+    console.error(deleteError);return;
+   }
+   await adminLoadPlayers();
+  });
+  actions.append(delta,apply,remove);row.append(h,detail,actions);box.append(row);
  });
 }
 async function adminLoadMissions(){
