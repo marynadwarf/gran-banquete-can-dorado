@@ -63,10 +63,25 @@ header{background:linear-gradient(135deg,#2b1d18,#513526 55%,#2b1d18);color:#fff
 </section>
 <main class="wrap hidden" id="banquet">
  <section class="welcome"><div class="topline"><div><div class="tag">Bienvenida a la taberna</div><div class="user" id="playername">Aventurero</div></div><div class="coinpill">🪙 <span id="coinCount">0</span> monedas</div></div><p class="hint" style="margin:12px 0 0">Tu destino se escribe esta noche. Cumple tus encargos, gana monedas y deja tu huella en las crónicas del reino.</p></section>
- <nav class="tabs" aria-label="Secciones"><button class="tab active" data-tab="missions">📜 Misiones</button><button class="tab" data-tab="ranking">🏆 Ranking</button><button class="tab" data-tab="board">📯 Tablón</button><button class="tab" data-tab="events">⚔️ Eventos</button></nav>
+ <nav class="tabs" aria-label="Secciones"><button class="tab active" data-tab="missions">📜 Misiones</button><button class="tab" data-tab="ranking">🏆 Ranking</button><button class="tab" data-tab="board">📯 Tablón</button><button class="tab" data-tab="events">⚔️ Eventos</button><button class="tab" data-tab="memories">📖 Recuerdos</button></nav>
  <section class="panel active" id="missions"><h2 class="sectionhead">Tus encargos</h2><p class="hint">Completa tus misiones durante la celebración. ¡No reveles tus objetivos secretos!</p><div id="missionlist"></div><div class="notice">✨ Marca una misión cuando la hayas cumplido. La recompensa se añadirá a tu bolsa y no podrás reclamarla dos veces.</div><div class="status" id="missionstatus"></div></section>
  <section class="panel" id="ranking"><h2 class="sectionhead">La fama del reino</h2><p class="hint">Clasificación compartida de todos los aventureros.</p><div id="ranklist"></div><div class="status" id="rankstatus"></div><div class="notice">👑 Al cierre del banquete, la persona con más monedas será coronada Gran Tesorera del Reino.</div></section>
  <section class="panel" id="board"><h2 class="sectionhead">Tablón de encargos</h2><p class="hint">Estas misiones son públicas, pero cada una solo puede ser reclamada por un aventurero. ¡Elige bien tu desafío!</p><div id="boardlist"><p class="hint">Abre el tablón para consultar los encargos…</p></div><div class="status" id="boardstatus" aria-live="polite"></div><div class="notice">📯 Cuando reclames un encargo, quedará reservado para ti. Al completarlo recibirás las monedas automáticamente.</div></section>
+ <section class="panel" id="memories">
+ <h2 class="sectionhead">📖 El libro de las crónicas</h2>
+ <p class="hint">Deja unas palabras para la posteridad o escribe una carta a otro aventurero. Todas las publicaciones serán visibles para los invitados.</p>
+ <div class="card">
+  <h3 style="margin:0 0 10px">✒️ Dejar un recuerdo</h3>
+  <div class="field"><label for="wallrecipient">¿A quién va dirigido?</label><select id="wallrecipient" style="width:100%;border:1px solid #cdbb9d;border-radius:8px;background:#fffaf1;padding:12px;font:inherit;color:var(--ink)"><option value="">📜 Para toda la taberna</option></select></div>
+  <div class="field"><label for="wallmessage">Tu mensaje</label><textarea id="wallmessage" maxlength="2000" rows="4" placeholder="Escribe aquí tu dedicatoria, anécdota o carta…" style="width:100%;border:1px solid #cdbb9d;border-radius:8px;background:#fffaf1;padding:12px;font:inherit;color:var(--ink);resize:vertical"></textarea></div>
+  <button class="btn gold full" id="publishwall">📜 Publicar en las crónicas</button>
+  <div class="status" id="wallstatus" aria-live="polite"></div>
+ </div>
+ <h3 class="sectionhead">📌 Recuerdos de los aventureros</h3>
+ <div id="wallposts"><p class="hint">Cargando las crónicas…</p></div>
+ <button class="btn secondary full" id="refreshwall">Actualizar recuerdos</button>
+ <div class="notice">🕯️ Las palabras que compartas aquí quedarán a la vista de todos los invitados.</div>
+ </section>
  <section class="panel" id="events"><h2 class="sectionhead">Agenda del banquete</h2><p class="hint">La anfitriona anunciará cada evento. ¡Permanece atento a las campanas!</p><div class="grid">
  <div class="event"><div class="num">01</div><h3>Justas de espuma</h3><p>El torneo de escudos y armas. ¡Que gane el más honorable!</p></div>
  <div class="event"><div class="num">02</div><h3>Arquería real</h3><p>Prueba tu puntería y suma gloria para tu casa.</p></div>
@@ -83,7 +98,7 @@ const $ = id => document.getElementById(id);
 function showError(message){$("gateerror").textContent=message}
 function setBusy(button,busy,label){button.disabled=busy;if(busy)button.textContent=label;else button.textContent=button.dataset.original||button.textContent}
 document.querySelectorAll(".btn").forEach(b=>b.dataset.original=b.textContent);
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");$(t.dataset.tab).classList.add("active");if(t.dataset.tab==="ranking")loadRanking();if(t.dataset.tab==="board")loadBoard()}));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");$(t.dataset.tab).classList.add("active");if(t.dataset.tab==="ranking")loadRanking();if(t.dataset.tab==="board")loadBoard();if(t.dataset.tab==="memories")loadWall()}));
 async function createProfile(){
  const button=$("createprofile"),alias=$("newalias").value.trim();showError("");
  if(alias.length<2){showError("Elige un nombre de al menos 2 caracteres.");return}
@@ -178,6 +193,46 @@ async function loadBoard(){
   card.append(top,desc,state,action);box.append(card);
  });
 }
+async function loadWall(){
+ const box=$("wallposts"),status=$("wallstatus"),select=$("wallrecipient");
+ box.innerHTML="<p class='hint'>Consultando las crónicas…</p>";
+ const [{data:posts,error:postsError},{data:players,error:playersError}]=await Promise.all([
+  db.rpc("get_wall_posts",{p_access_code:activePlayer.access_code}),
+  db.rpc("get_wall_players",{p_access_code:activePlayer.access_code})
+ ]);
+ if(playersError){status.textContent="No se ha podido cargar la lista de aventureros.";console.error(playersError);return}
+ const current=select.value;
+ select.innerHTML="";
+ const everyone=document.createElement("option");everyone.value="";everyone.textContent="📜 Para toda la taberna";select.append(everyone);
+ (players||[]).forEach(p=>{const option=document.createElement("option");option.value=p.player_id;option.textContent=p.player_alias;select.append(option)});
+ select.value=current;
+ if(postsError){box.innerHTML="<p class='error'>No se han podido cargar los recuerdos.</p>";console.error(postsError);return}
+ box.innerHTML="";
+ if(!posts||!posts.length){box.innerHTML="<p class='hint'>Todavía no hay recuerdos. ¡Sé el primero en escribir en las crónicas!</p>";return}
+ posts.forEach(post=>{
+  const card=document.createElement("article");card.className="card";
+  card.style.background=post.post_type==="letter"?"#f3e5c9":"var(--paper)";
+  const head=document.createElement("div");head.className="topline";
+  const author=document.createElement("strong");author.textContent=post.post_type==="letter"?"✉️ "+post.author_alias+" → "+post.recipient_alias:"📜 "+post.author_alias;
+  const date=document.createElement("span");date.className="hint";date.style.margin="0";date.textContent=new Date(post.created_at).toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"});
+  const body=document.createElement("p");body.style.whiteSpace="pre-wrap";body.style.lineHeight="1.55";body.style.margin="12px 0 0";body.textContent=post.body;
+  head.append(author,date);card.append(head,body);box.append(card);
+ });
+}
+$("publishwall").addEventListener("click",async()=>{
+ const button=$("publishwall"),body=$("wallmessage").value.trim(),recipient=$("wallrecipient").value||null;
+ $("wallstatus").textContent="";
+ if(!body){$("wallstatus").textContent="Escribe algo antes de publicar.";return}
+ button.disabled=true;button.textContent="Publicando…";
+ const {data,error}=await db.rpc("create_wall_post",{p_access_code:activePlayer.access_code,p_body:body,p_recipient_id:recipient});
+ button.disabled=false;button.textContent="📜 Publicar en las crónicas";
+ if(error){$("wallstatus").textContent="No se ha podido publicar. Inténtalo de nuevo.";console.error(error);return}
+ $("wallmessage").value="";
+ $("wallstatus").textContent="¡Tu recuerdo ya forma parte de las crónicas!";
+ await loadWall();
+});
+$("refreshwall").addEventListener("click",loadWall);
+
 async function loadRanking(){
  $("ranklist").innerHTML="<p class='hint'>Consultando el reino…</p>";
  const {data,error}=await db.rpc("get_leaderboard");
