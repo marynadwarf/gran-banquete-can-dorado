@@ -278,6 +278,31 @@ header:after{position:relative}
  color:#c9a45f;
 }
 
+
+/* ═══ Corrección visual: tablones reales y contraste ═══ */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+header{
+ width:100%;min-width:0;box-sizing:border-box;text-align:center;
+ background:
+  linear-gradient(to bottom,transparent 0 32%,rgba(24,13,7,.52) 32.4% 33.2%,transparent 33.6% 65%,rgba(24,13,7,.48) 65.4% 66.2%,transparent 66.6%),
+  repeating-linear-gradient(7deg,rgba(239,198,137,.035) 0 1px,transparent 1px 23px),
+  radial-gradient(ellipse at 22% 22%,rgba(224,177,112,.18),transparent 36%),
+  radial-gradient(ellipse at 78% 78%,rgba(15,8,4,.2),transparent 42%),
+  linear-gradient(180deg,#765033 0%,#573821 33%,#68462c 34%,#4b2e1d 66%,#654329 67%,#3b2418 100%);
+ border:9px solid #29180f;border-bottom:5px solid #c49a52;
+ box-shadow:inset 0 0 0 2px rgba(226,190,132,.42),inset 0 0 24px rgba(0,0,0,.38),0 7px 24px rgba(0,0,0,.4);
+}
+header:before{content:"";position:absolute;inset:7px;border:1px solid rgba(226,190,132,.38);box-shadow:inset 0 0 12px rgba(0,0,0,.2);pointer-events:none}
+header .eyebrow,header .brand,header .sub{position:relative;z-index:1}
+header .brand{max-width:100%;overflow-wrap:anywhere}
+header:after{content:"✦  ❧ ━━━━━━━━━━━━━━━━━ ❧  ✦";max-width:min(420px,90%);position:relative}
+#banquet .panel .sectionhead{color:#f5e8ca!important;text-shadow:0 2px 5px rgba(0,0,0,.8)!important;border-bottom-color:rgba(231,207,161,.58)!important}
+#banquet .panel .hint{color:#e8d8b8!important;text-shadow:0 1px 3px rgba(0,0,0,.65)}
+#banquet .panel .sectionhead:after{background:#173328!important;color:#dfbd78!important}
+#banquet{width:100%;max-width:1020px;margin-left:auto;margin-right:auto}
+#banquet .tabs{max-width:100%;min-width:0}
+@media(max-width:700px){header{padding:28px 14px 23px}.wrap{width:100%}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
